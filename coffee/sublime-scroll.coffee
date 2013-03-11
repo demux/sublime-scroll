@@ -106,7 +106,9 @@
 			if not (event.target is $scroll_overlay[0])
 				return false
 
-			y = event.offsetY - scroll_bar_height / 2
+			offsetY = event.offsetY or event.originalEvent.layerY
+
+			y = offsetY - scroll_bar_height / 2
 
 			max_pos = Math.round(get_content_height() * scale_factor - scroll_bar_height)
 

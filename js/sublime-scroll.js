@@ -105,12 +105,13 @@
       return drag_active = false;
     };
     onDrag = function(event) {
-      var max_pos, y;
+      var max_pos, offsetY, y;
       drag_active = true;
       if (!(event.target === $scroll_overlay[0])) {
         return false;
       }
-      y = event.offsetY - scroll_bar_height / 2;
+      offsetY = event.offsetY || event.originalEvent.layerY;
+      y = offsetY - scroll_bar_height / 2;
       max_pos = Math.round(get_content_height() * scale_factor - scroll_bar_height);
       if (y < 0) {
         y = 0;
