@@ -3,25 +3,44 @@
 		$el = @
 
 		settings =
-			top: 59
+			top: 0
+			bottom: 0
 			zIndex: 50
 			width: 150
-			height: null
 			opacity: 0.1
-			color: 'white'
-			content: $el[0].outerHTML
-			content_width: null
-			content_height: null
-			content_padding: 30
-			onResize: ($el, settings, $scroll_wrapper) ->
-				settings.content_width = $el.width() + settings.content_padding * 2
-				settings.content_height = $el.outerHeight(true)
-				return true
+			color: '#FFFFFF'
 
-		settings.height = $(window).height()
+			content: ($el, settings, $scroll_wrapper) ->
+				$content = $el.clone()
+				$content.css
+					paddingTop: parseInt($el.css('padding-top')) - settings.top
+					paddingBottom: parseInt($el.css('padding-bottom')) - settings.bottom
+				return $content[0].outerHTML
+
+			content_padding: parseInt($el.css('padding-left'))
+			
+			content_width: ($el, settings, $scroll_wrapper) ->
+				return $el.width() + get_content_padding() * 2
+
+			content_height: ($el, settings, $scroll_wrapper) ->
+				return $el.outerHeight(true)
+			
+			onResize: ($el, settings, $scroll_wrapper) ->
+				return true
 
 		# Merge default settings with options.
 		settings = $.extend settings, options
+
+		get_setting = (setting) ->
+			if typeof(settings[setting]) is "function"
+				return settings[setting]($el, settings, $scroll_wrapper)
+			else
+				return settings[setting]
+
+		get_content = -> get_setting('content')
+		get_content_padding = -> get_setting('content_padding')
+		get_content_width = -> get_setting('content_width')
+		get_content_height = -> get_setting('content_height')
 
 		# Canvas
 		$scroll_wrapper = $ '<div>',
@@ -30,7 +49,7 @@
 			position: 'fixed'
 			zIndex: settings.zIndex
 			width: settings.width
-			height: settings.height
+			height: $(window).height() - settings.top - settings.bottom
 			top: settings.top
 			right: 0
 		.appendTo($('body'))
@@ -89,7 +108,7 @@
 
 			y = event.offsetY - scroll_bar_height / 2
 
-			max_pos = Math.round(settings.content_height * scale_factor - scroll_bar_height)
+			max_pos = Math.round(get_content_height() * scale_factor - scroll_bar_height)
 
 			if y < 0
 				y = 0
@@ -119,18 +138,18 @@
 
 			doit = setTimeout ->
 				# Draw content on canvas
-				canvas.width  = settings.content_width
-				canvas.height = settings.content_height
+				canvas.width  = get_content_width()
+				canvas.height = get_content_height()
 
-				scale_factor = settings.width / settings.content_width
+				scale_factor = settings.width / get_content_width()
 
 				context.scale(scale_factor, scale_factor)
 
-				rasterizeHTML.drawHTML settings.content,
-					width: settings.content_width
-					height: settings.content_height
+				rasterizeHTML.drawHTML get_content($el, settings, $scroll_wrapper),
+					width: get_content_width()
+					height: get_content_height()
 				, (image) ->
-					context.drawImage(image, settings.content_padding * scale_factor, 0)
+					context.drawImage(image, get_content_padding() * scale_factor, 0)
 
 				# Scroll bar
 				scroll_bar_height = $(window).height() * scale_factor
@@ -147,7 +166,7 @@
 				$scroll_bar.css
 					top: $(window).scrollTop() * scale_factor
 
-			scroll_height = settings.content_height * scale_factor
+			scroll_height = get_content_height() * scale_factor
 			window_height = $(window).height()
 			if scroll_height > window_height
 				y = $scroll_bar.position().top

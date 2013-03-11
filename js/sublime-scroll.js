@@ -2,34 +2,62 @@
 
 (function($) {
   return $.fn.sublimeScroll = function(options) {
-    var $canvas, $el, $scroll_bar, $scroll_overlay, $scroll_wrapper, canvas, context, doit, drag_active, onDrag, onDragEnd, scale_factor, scroll_bar_height, scroll_height, settings, window_height;
+    var $canvas, $el, $scroll_bar, $scroll_overlay, $scroll_wrapper, canvas, context, doit, drag_active, get_content, get_content_height, get_content_padding, get_content_width, get_setting, onDrag, onDragEnd, scale_factor, scroll_bar_height, scroll_height, settings, window_height;
     $el = this;
     settings = {
-      top: 59,
+      top: 0,
+      bottom: 0,
       zIndex: 50,
       width: 150,
-      height: null,
       opacity: 0.1,
-      color: 'white',
-      content: $el[0].outerHTML,
-      content_width: null,
-      content_height: null,
-      content_padding: 30,
+      color: '#FFFFFF',
+      content: function($el, settings, $scroll_wrapper) {
+        var $content;
+        $content = $el.clone();
+        $content.css({
+          paddingTop: parseInt($el.css('padding-top')) - settings.top,
+          paddingBottom: parseInt($el.css('padding-bottom')) - settings.bottom
+        });
+        return $content[0].outerHTML;
+      },
+      content_padding: parseInt($el.css('padding-left')),
+      content_width: function($el, settings, $scroll_wrapper) {
+        return $el.width() + get_content_padding() * 2;
+      },
+      content_height: function($el, settings, $scroll_wrapper) {
+        return $el.outerHeight(true);
+      },
       onResize: function($el, settings, $scroll_wrapper) {
-        settings.content_width = $el.width() + settings.content_padding * 2;
-        settings.content_height = $el.outerHeight(true);
         return true;
       }
     };
-    settings.height = $(window).height();
     settings = $.extend(settings, options);
+    get_setting = function(setting) {
+      if (typeof settings[setting] === "function") {
+        return settings[setting]($el, settings, $scroll_wrapper);
+      } else {
+        return settings[setting];
+      }
+    };
+    get_content = function() {
+      return get_setting('content');
+    };
+    get_content_padding = function() {
+      return get_setting('content_padding');
+    };
+    get_content_width = function() {
+      return get_setting('content_width');
+    };
+    get_content_height = function() {
+      return get_setting('content_height');
+    };
     $scroll_wrapper = $('<div>', {
       id: "sublime-scroll"
     }).css({
       position: 'fixed',
       zIndex: settings.zIndex,
       width: settings.width,
-      height: settings.height,
+      height: $(window).height() - settings.top - settings.bottom,
       top: settings.top,
       right: 0
     }).appendTo($('body'));
@@ -83,7 +111,7 @@
         return false;
       }
       y = event.offsetY - scroll_bar_height / 2;
-      max_pos = Math.round(settings.content_height * scale_factor - scroll_bar_height);
+      max_pos = Math.round(get_content_height() * scale_factor - scroll_bar_height);
       if (y < 0) {
         y = 0;
       }
@@ -110,15 +138,15 @@
         return false;
       }
       return doit = setTimeout(function() {
-        canvas.width = settings.content_width;
-        canvas.height = settings.content_height;
-        scale_factor = settings.width / settings.content_width;
+        canvas.width = get_content_width();
+        canvas.height = get_content_height();
+        scale_factor = settings.width / get_content_width();
         context.scale(scale_factor, scale_factor);
-        rasterizeHTML.drawHTML(settings.content, {
-          width: settings.content_width,
-          height: settings.content_height
+        rasterizeHTML.drawHTML(get_content($el, settings, $scroll_wrapper), {
+          width: get_content_width(),
+          height: get_content_height()
         }, function(image) {
-          return context.drawImage(image, settings.content_padding * scale_factor, 0);
+          return context.drawImage(image, get_content_padding() * scale_factor, 0);
         });
         scroll_bar_height = $(window).height() * scale_factor;
         $scroll_bar.css({
@@ -134,7 +162,7 @@
           top: $(window).scrollTop() * scale_factor
         });
       }
-      scroll_height = settings.content_height * scale_factor;
+      scroll_height = get_content_height() * scale_factor;
       window_height = $(window).height();
       if (scroll_height > window_height) {
         y = $scroll_bar.position().top;
