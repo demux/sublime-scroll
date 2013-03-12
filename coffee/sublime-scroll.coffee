@@ -12,9 +12,17 @@
 
 			content: ($el, settings, $scroll_wrapper) ->
 				$content = $el.clone()
+
 				$content.css
 					paddingTop: parseInt($el.css('padding-top')) - settings.top
 					paddingBottom: parseInt($el.css('padding-bottom')) - settings.bottom
+
+				# Remove all javascript from content:
+				$content.find('script').remove()
+
+				# Remove all foreign stylesheets:
+				$content.find('link[href^="http"]')
+
 				return $content[0].outerHTML
 
 			content_padding: parseInt($el.css('padding-left'))
@@ -31,16 +39,16 @@
 		# Merge default settings with options.
 		settings = $.extend settings, options
 
-		get_setting = (setting) ->
+		_get_setting = (setting) ->
 			if typeof(settings[setting]) is "function"
 				return settings[setting]($el, settings, $scroll_wrapper)
 			else
 				return settings[setting]
 
-		get_content = -> get_setting('content')
-		get_content_padding = -> get_setting('content_padding')
-		get_content_width = -> get_setting('content_width')
-		get_content_height = -> get_setting('content_height')
+		get_content = -> _get_setting('content')
+		get_content_padding = -> _get_setting('content_padding')
+		get_content_width = -> _get_setting('content_width')
+		get_content_height = -> _get_setting('content_height')
 
 		# Canvas
 		$scroll_wrapper = $ '<div>',
@@ -98,7 +106,7 @@
 		onDragEnd = (event) ->
 			event.preventDefault()
 			$scroll_overlay.css({width: settings.width})
-			$(window).off('mousemove', onDrag)
+			$(window).off('mousemove.sublimeScroll', onDrag)
 			drag_active = false
 
 		onDrag = (event) ->
@@ -127,12 +135,12 @@
 
 			$scroll_overlay.css({width:'100%'})
 
-			$(window).on('mousemove', onDrag).one('mouseup', onDragEnd)
+			$(window).on('mousemove.sublimeScroll', onDrag).one('mouseup', onDragEnd)
 			onDrag(event)
 
 
 		doit = null
-		$(window).resize ->
+		$(window).bind 'resize.sublimeScroll', ->
 			clearTimeout(doit)
 
 			if not settings.onResize($el, settings, $scroll_wrapper)
@@ -163,7 +171,7 @@
 			, 100
 		.resize()
 		
-		$(window).scroll ->
+		$(window).bind 'scroll.sublimeScroll', ->
 			if not drag_active
 				$scroll_bar.css
 					top: $(window).scrollTop() * scale_factor
@@ -185,4 +193,6 @@
 			$scroll_overlay.css
 				marginTop: margin
 		.scroll()
+
+		return @
 )(jQuery)

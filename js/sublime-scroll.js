@@ -2,7 +2,7 @@
 
 (function($) {
   return $.fn.sublimeScroll = function(options) {
-    var $canvas, $el, $scroll_bar, $scroll_overlay, $scroll_wrapper, canvas, context, doit, drag_active, get_content, get_content_height, get_content_padding, get_content_width, get_setting, onDrag, onDragEnd, scale_factor, scroll_bar_height, scroll_height, settings, window_height;
+    var $canvas, $el, $scroll_bar, $scroll_overlay, $scroll_wrapper, canvas, context, doit, drag_active, get_content, get_content_height, get_content_padding, get_content_width, onDrag, onDragEnd, scale_factor, scroll_bar_height, scroll_height, settings, window_height, _get_setting;
     $el = this;
     settings = {
       top: 0,
@@ -18,6 +18,8 @@
           paddingTop: parseInt($el.css('padding-top')) - settings.top,
           paddingBottom: parseInt($el.css('padding-bottom')) - settings.bottom
         });
+        $content.find('script').remove();
+        $content.find('link[href^="http"]');
         return $content[0].outerHTML;
       },
       content_padding: parseInt($el.css('padding-left')),
@@ -32,7 +34,7 @@
       }
     };
     settings = $.extend(settings, options);
-    get_setting = function(setting) {
+    _get_setting = function(setting) {
       if (typeof settings[setting] === "function") {
         return settings[setting]($el, settings, $scroll_wrapper);
       } else {
@@ -40,16 +42,16 @@
       }
     };
     get_content = function() {
-      return get_setting('content');
+      return _get_setting('content');
     };
     get_content_padding = function() {
-      return get_setting('content_padding');
+      return _get_setting('content_padding');
     };
     get_content_width = function() {
-      return get_setting('content_width');
+      return _get_setting('content_width');
     };
     get_content_height = function() {
-      return get_setting('content_height');
+      return _get_setting('content_height');
     };
     $scroll_wrapper = $('<div>', {
       id: "sublime-scroll"
@@ -101,7 +103,7 @@
       $scroll_overlay.css({
         width: settings.width
       });
-      $(window).off('mousemove', onDrag);
+      $(window).off('mousemove.sublimeScroll', onDrag);
       return drag_active = false;
     };
     onDrag = function(event) {
@@ -129,11 +131,11 @@
       $scroll_overlay.css({
         width: '100%'
       });
-      $(window).on('mousemove', onDrag).one('mouseup', onDragEnd);
+      $(window).on('mousemove.sublimeScroll', onDrag).one('mouseup', onDragEnd);
       return onDrag(event);
     });
     doit = null;
-    $(window).resize(function() {
+    $(window).bind('resize.sublimeScroll', function() {
       clearTimeout(doit);
       if (!settings.onResize($el, settings, $scroll_wrapper)) {
         return false;
@@ -156,7 +158,7 @@
         return $(window).scroll();
       }, 100);
     }).resize();
-    return $(window).scroll(function() {
+    $(window).bind('scroll.sublimeScroll', function() {
       var f, margin, y;
       if (!drag_active) {
         $scroll_bar.css({
@@ -179,5 +181,6 @@
         marginTop: margin
       });
     }).scroll();
+    return this;
   };
 })(jQuery);
