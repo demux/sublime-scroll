@@ -10,7 +10,7 @@ Working demo: http://django.is
 ###Requires:
 
 * jQuery v1.9.1 (http://jquery.com/)
-* <strike>rasterizeHTML.js (https://github.com/cburgmer/rasterizeHTML.js)</strike> (canvas is no longer being used to render the scroll)
+* ~~rasterizeHTML.js (https://github.com/cburgmer/rasterizeHTML.js)~~ (canvas is no longer being used to render the scroll)
 
 ### Settings:
 TODO
