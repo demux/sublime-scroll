@@ -1,39 +1,27 @@
 (($) ->
-	$.fn.sublimeScroll = (options) ->
-		$el = @
+	$.sublimeScroll = (options) ->
+		if not (window.top is window)
+			return this
 
 		settings =
 			top: 0
 			bottom: 0
-			zIndex: 50
+			zIndex: 200
 			width: 150
-			opacity: 0.1
-			color: '#FFFFFF'
-
-			content: ($el, settings, $scroll_wrapper) ->
-				$content = $el.clone()
-
-				$content.css
-					paddingTop: parseInt($el.css('padding-top')) - settings.top
-					paddingBottom: parseInt($el.css('padding-bottom')) - settings.bottom
-
-				# Remove all javascript from content:
-				$content.find('script').remove()
-
-				# Remove all foreign stylesheets:
-				$content.find('link[href^="http"]')
-
-				return $content[0].outerHTML
-
-			content_padding: parseInt($el.css('padding-left'))
+			height: (settings, $scroll_wrapper) ->
+				return $(window).height() - settings.top - settings.bottom
+			opacity: 0.9
+			color: 'rgba(255, 255, 255, 0.1)'
+			transparent: true
+			fixed_elements: ''
 			
-			content_width: ($el, settings, $scroll_wrapper) ->
-				return $el.width() + get_content_padding() * 2
+			content_width: (settings, $scroll_wrapper) ->
+				return $('body').width()
 
-			content_height: ($el, settings, $scroll_wrapper) ->
-				return $el.outerHeight(true)
+			content_height: (settings, $scroll_wrapper) ->
+				return $('body').outerHeight(true)
 			
-			onResize: ($el, settings, $scroll_wrapper) ->
+			onResize: (settings, $scroll_wrapper) ->
 				return true
 
 		# Merge default settings with options.
@@ -41,12 +29,11 @@
 
 		_get_setting = (setting) ->
 			if typeof(settings[setting]) is "function"
-				return settings[setting]($el, settings, $scroll_wrapper)
+				return settings[setting](settings, $scroll_wrapper)
 			else
 				return settings[setting]
 
-		get_content = -> _get_setting('content')
-		get_content_padding = -> _get_setting('content_padding')
+		get_height = -> _get_setting('height')
 		get_content_width = -> _get_setting('content_width')
 		get_content_height = -> _get_setting('content_height')
 
@@ -57,28 +44,33 @@
 			position: 'fixed'
 			zIndex: settings.zIndex
 			width: settings.width
-			height: $(window).height() - settings.top - settings.bottom
+			height: get_height()
 			top: settings.top
 			right: 0
+			overflow: 'hidden'
+			opacity: 0
 		.appendTo($('body'))
 
-		$canvas = $ '<canvas>',
-			id: 'sublime-scroll-canvas'
+		$iframe = $ '<iframe>',
+			id: 'sublime-scroll-iframe'
+			frameBorder: '0'
+			scrolling: 'no'
+			allowTransparency: true
 		.css
 			position: 'absolute'
+			border:0
+			margin:0
+			padding:0
+			overflow:'hidden'
 			top:0
 			left:0
 			zIndex: settings.zIndex + 1
 		.appendTo($scroll_wrapper)
-
-		canvas = $canvas[0]
-		context = canvas.getContext("2d")
+		iframe_document = $iframe[0].contentDocument or $iframe.contentWindow.document
 
 		# Scroll bar
 		drag_active = false
-		window_height = null
 		scale_factor = null
-		scroll_height = null
 		scroll_bar_height = null
 
 		$scroll_bar = $ '<div>',
@@ -89,8 +81,30 @@
 			width: '100%'
 			backgroundColor: settings.color
 			opacity: settings.opacity
-			zIndex:settings.zIndex + 3
-		.appendTo($scroll_wrapper)
+			zIndex:99999
+
+		$html = $('html').clone()
+		$html.find('body').addClass('sublime-scroll-window')
+		$html.find('#sublime-scroll').remove()
+		$scroll_bar.appendTo($html.find('body'))
+
+		# Transparent scroll pane background:
+		if settings.transparent
+			$html.find('body').css
+				backgroundColor: 'transparent'
+
+		# Move fixed elements:
+		$html.find(settings.fixed_elements).remove().css
+			position: 'absolute'
+		.appendTo($scroll_bar)
+
+		$iframe.load ->
+			$scroll_bar = $('#sublime-scroll-bar', iframe_document)
+			$(window).resize().scroll()
+			$scroll_wrapper.animate({opacity: 1}, 100)
+
+		iframe_document.write($html.html())
+		iframe_document.close()
 
 		$scroll_overlay = $ '<div>',
 			id: 'sublime-scroll-overlay'
@@ -116,9 +130,9 @@
 
 			offsetY = event.offsetY or event.originalEvent.layerY
 
-			y = offsetY - scroll_bar_height / 2
+			y = (offsetY / scale_factor - scroll_bar_height / 2)
 
-			max_pos = Math.round(get_content_height() * scale_factor - scroll_bar_height)
+			max_pos = Math.round(get_content_height() - scroll_bar_height)
 
 			if y < 0
 				y = 0
@@ -128,7 +142,7 @@
 			$scroll_bar.css
 				top: y
 
-			$(window).scrollTop(y / scale_factor)
+			$(window).scrollTop(y)
 
 		$scroll_overlay.on 'mousedown', (event) ->
 			event.preventDefault()
@@ -139,60 +153,56 @@
 			onDrag(event)
 
 
-		doit = null
 		$(window).bind 'resize.sublimeScroll', ->
-			clearTimeout(doit)
-
-			if not settings.onResize($el, settings, $scroll_wrapper)
+			if not settings.onResize(settings, $scroll_wrapper)
 				return false
 
-			doit = setTimeout ->
-				# Draw content on canvas
-				canvas.width  = get_content_width()
-				canvas.height = get_content_height()
+			width = get_content_width()
+			height = get_content_height()
 
-				scale_factor = settings.width / get_content_width()
+			scale_factor = settings.width / width
 
-				context.scale(scale_factor, scale_factor)
+			$iframe.css
+				width: width
+				height: height
+				transform: 'scale(' + scale_factor + ')'
+				marginLeft: -(width / 2 - width * scale_factor / 2)
+				marginTop: -(height / 2 - height * scale_factor / 2)
 
-				rasterizeHTML.drawHTML get_content($el, settings, $scroll_wrapper),
-					width: get_content_width()
-					height: get_content_height()
-				, (image) ->
-					context.drawImage(image, get_content_padding() * scale_factor, 0)
+			# Scroll wrapper
+			$scroll_wrapper.css
+				height: get_height()
 
-				# Scroll bar
-				scroll_bar_height = $(window).height() * scale_factor
+			# Scroll bar
+			scroll_bar_height = $(window).height()
 
-				$scroll_bar.css
-					height: scroll_bar_height
+			$scroll_bar.css
+				height: scroll_bar_height
 
-				$(window).scroll()
-			, 100
-		.resize()
+			$(window).scroll()
 		
 		$(window).bind 'scroll.sublimeScroll', ->
 			if not drag_active
 				$scroll_bar.css
-					top: $(window).scrollTop() * scale_factor
+					top: $(window).scrollTop()
 
 			scroll_height = get_content_height() * scale_factor
-			window_height = $(window).height()
+			window_height = get_height()
+
 			if scroll_height > window_height
-				y = $scroll_bar.position().top
+				y = $scroll_bar.position().top * scale_factor
 				
-				f = (scroll_bar_height / scroll_height) * y
+				f = (scroll_bar_height / scroll_height) * y * scale_factor
 
 				margin = (y / scroll_height) * (window_height - scroll_height) - f
 			else
 				margin = 0
 
-			$scroll_wrapper.css
-				marginTop: margin
+			$iframe.css
+				top: margin
 
-			$scroll_overlay.css
-				marginTop: margin
-		.scroll()
+			$iframe.css
+				top: margin
 
-		return @
+		return this
 )(jQuery)

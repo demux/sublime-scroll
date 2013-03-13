@@ -1,7 +1,7 @@
-sublime-scroll v0.0.3 (alpha)
+sublime-scroll v0.0.4 (alpha)
 ====================
 
-"Sublime Text 2"-style scroll bars. Renders a visual scroll bar on right side of the webpage using html canvas.
+"Sublime Text 2"-style scroll bars. Renders a visual scroll bar on right side of the webpage using css scaling.
 
 Working demo: http://django.is
 
@@ -10,7 +10,7 @@ Working demo: http://django.is
 ###Requires:
 
 * jQuery v1.9.1 (http://jquery.com/)
-* rasterizeHTML.js (https://github.com/cburgmer/rasterizeHTML.js)
+* <strike>rasterizeHTML.js (https://github.com/cburgmer/rasterizeHTML.js)</strike> (canvas is no longer being used to render the scroll)
 
 ### Settings:
 TODO
