@@ -1,4 +1,4 @@
-sublime-scroll v0.0.4 (alpha)
+sublime-scroll v0.0.5 (alpha)
 ====================
 
 "Sublime Text 2"-style scroll bars. Renders a visual scroll bar on right side of the webpage using css scaling.
