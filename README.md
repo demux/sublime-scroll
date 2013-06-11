@@ -5,6 +5,8 @@ sublime-scroll v0.0.5 (alpha)
 
 Working demo: http://django.is
 
+![django.is screenshot](docs/django.is.png)
+
 ## Installation
 
 ###Requires:
