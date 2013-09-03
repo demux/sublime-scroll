@@ -40,3 +40,16 @@ $ ->
         content_width: ($el, settings, $scroll_wrapper) ->
             return $('#content .wrapper').width() + 60
 ~~~
+
+##### JavaScript Example:
+~~~ javascript
+$(document).ready(function() {
+    $.sublimeScroll({
+        top: 59,
+        fixed_elements: 'header.top',
+        content_width: function($el, settings, $scroll_wrapper) {
+            return $('#content .wrapper').width() + 60
+        }
+    });
+});
+~~~
