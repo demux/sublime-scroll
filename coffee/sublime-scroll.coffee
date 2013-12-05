@@ -1,4 +1,4 @@
-(($) ->
+(($, undefined) ->
 	class SublimeScroll
 		el:
 			wrapper:	null
@@ -159,7 +159,7 @@
 				zIndex: @settings.zIndex + 3
 			.appendTo(@el.wrapper)
 
-		# Om iframe load event:
+		# On iframe load event:
 		onIframeLoad: (event) =>
 			@el.scroll_bar = $('#sublime-scroll-bar', @iframe_document)
 			$(window).resize().scroll()
@@ -268,6 +268,8 @@
 
 			return @
 
+
+	window.SublimeScroll = SublimeScroll
 
 	_sublime_scroll_object = null
 
