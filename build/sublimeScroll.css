@@ -34,4 +34,5 @@ body.sublime-scroll-window #sublime-scroll-bar {
 }
 body.sublime-scroll-window #sublime-scroll-bar .sublime-scroll-fixed-element {
   position: absolute;
+  box-shadow: none;
 }

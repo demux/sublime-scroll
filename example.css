@@ -1,8 +1,8 @@
 html, body {
 	background: black;
-	color:white;
-	margin:0;
-	padding:0;
+	color: white;
+	margin: 0;
+	padding: 0;
 	font-family: Helvetica, Arial, sans-serif;
 	height: 100%;
 }
@@ -10,7 +10,7 @@ html, body {
 .wrapper {
 	width: 800px;
 	margin: 0 auto;
-	padding-right: 150px;
+	padding-right: 200px;
 }
 
 header, footer {
@@ -20,6 +20,7 @@ header, footer {
 	width: 100%;
 	background-color: #333;
 	box-shadow: 0 0 5px 0 black;
+	z-index: 10000;
 }
 
 header {
@@ -34,10 +35,9 @@ footer {
 	bottom: 0;
 	height: 40px;
 	line-height: 40px;
-	text-align: right
 }
 
 
 body.sublime-scroll-window .wrapper {
-    padding:0
+    padding: 0;
 }

@@ -13,8 +13,9 @@
             $.sublimeScroll({
                 top: 80,
                 bottom: 40,
-                fixed_elements: 'header.top, footer.bottom',
-                content_width: function() {
+                scrollWidth: 200,
+                fixedElements: 'header.top, footer.bottom',
+                contentWidth: function() {
                     return $('#content .wrapper').outerWidth();
                 }
             });
