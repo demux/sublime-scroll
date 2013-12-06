@@ -56,10 +56,6 @@
       this.settings = {
         top: 0,
         bottom: 0,
-        zIndex: 9999,
-        opacity: 0.9,
-        color: 'rgba(255, 255, 255, 0.1)',
-        transparent_background: true,
         fixed_elements: '',
         scroll_width: 150
       };
@@ -93,65 +89,33 @@
       this.el.wrapper = $('<div>', {
         id: "sublime-scroll"
       }).css({
-        position: 'fixed',
-        zIndex: this.settings.zIndex,
         width: this.get_scroll_width(),
         height: this.get_scroll_height(),
-        top: this.settings.top,
-        right: 0,
-        overflow: 'hidden',
-        opacity: 0
+        top: this.settings.top
       }).appendTo($('body'));
       this.el.iframe = $('<iframe>', {
         id: 'sublime-scroll-iframe',
         frameBorder: '0',
         scrolling: 'no',
         allowTransparency: true
-      }).css({
-        position: 'absolute',
-        border: 0,
-        margin: 0,
-        padding: 0,
-        overflow: 'hidden',
-        top: 0,
-        left: 0,
-        zIndex: this.settings.zIndex + 1
       }).appendTo(this.el.wrapper);
       this.iframe_document = this.el.iframe[0].contentDocument || this.el.iframe.contentWindow.document;
       this.el.scroll_bar = $('<div>', {
         id: 'sublime-scroll-bar'
-      }).css({
-        position: 'absolute',
-        right: 0,
-        width: '100%',
-        backgroundColor: this.settings.color,
-        opacity: this.settings.opacity,
-        zIndex: 99999
       });
       $html = $('html').clone();
       $html.find('body').addClass('sublime-scroll-window');
       $html.find('#sublime-scroll').remove();
       this.el.scroll_bar.appendTo($html.find('body'));
-      if (this.settings.transparent_background) {
-        $html.find('body').css({
-          backgroundColor: 'transparent'
-        });
-      }
-      $html.find(this.settings.fixed_elements).remove().css({
-        position: 'absolute'
-      }).appendTo(this.el.scroll_bar);
+      $html.find(this.settings.fixed_elements).remove().addClass('sublime-scroll-fixed-element').appendTo(this.el.scroll_bar);
       this.el.iframe.on('load', this.onIframeLoad);
       this.iframe_document.write($html.html());
       this.iframe_document.close();
       return this.el.overlay = $('<div>', {
         id: 'sublime-scroll-overlay'
       }).css({
-        position: 'fixed',
         top: this.settings.top,
-        right: 0,
-        width: this.get_scroll_width(),
-        height: '100%',
-        zIndex: this.settings.zIndex + 3
+        width: this.get_scroll_width()
       }).appendTo(this.el.wrapper);
     };
     prototype.onIframeLoad = function(event){
@@ -192,7 +156,7 @@
       return $(window).scroll();
     };
     prototype.onScroll = function(event){
-      var y, max_margin, factor, viewport_factor, margin;
+      var y, ch, max_margin, factor, viewport_factor, margin;
       if (!this.drag_active) {
         this.el.scroll_bar.css({
           top: $(window).scrollTop()
@@ -200,9 +164,10 @@
       }
       if (this.content_height_scaled > this.wrapper_height) {
         y = this.el.scroll_bar.position().top * this.scale_factor;
-        max_margin = this.content_height_scaled - this.wrapper_height;
-        factor = y / this.content_height_scaled;
-        viewport_factor = this.viewport_height_scaled / this.content_height_scaled;
+        ch = this.content_height_scaled - this.viewport_height_scaled;
+        max_margin = ch - this.wrapper_height;
+        factor = y / ch;
+        viewport_factor = this.viewport_height_scaled / ch;
         margin = -(factor * max_margin + viewport_factor * y);
       } else {
         margin = 0;

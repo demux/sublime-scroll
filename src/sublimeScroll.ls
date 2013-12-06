@@ -40,10 +40,6 @@ class SublimeScroll
         @settings =
             top: 0
             bottom: 0
-            zIndex: 9999
-            opacity: 0.9
-            color: 'rgba(255, 255, 255, 0.1)'
-            transparent_background: true
             fixed_elements: ''
             scroll_width: 150
             
@@ -89,78 +85,46 @@ class SublimeScroll
     # Render scroll bar:
     render: ->
         # Wrapper:
-        @el.wrapper = $ '<div>',
+        @el.wrapper = $ '<div>', do
             id: "sublime-scroll"
         .css do
-            position: 'fixed'
-            zIndex: @settings.zIndex
             width: @get_scroll_width()
             height: @get_scroll_height()
             top: @settings.top
-            right: 0
-            overflow: 'hidden'
-            opacity: 0
         .appendTo($('body'))
 
         # iframe:
-        @el.iframe = $ '<iframe>',
+        @el.iframe = $ '<iframe>', do
             id: 'sublime-scroll-iframe'
             frameBorder: '0'
             scrolling: 'no'
             allowTransparency: true
-        .css do
-            position: 'absolute'
-            border:0
-            margin:0
-            padding:0
-            overflow:'hidden'
-            top:0
-            left:0
-            zIndex: @settings.zIndex + 1
         .appendTo(@el.wrapper)
         
         @iframe_document = @el.iframe[0].contentDocument or @el.iframe.contentWindow.document
 
         # Scroll bar:
-        @el.scroll_bar = $ '<div>',
+        @el.scroll_bar = $ '<div>', do
             id: 'sublime-scroll-bar'
-        .css do
-            position: 'absolute'
-            right: 0
-            width: '100%'
-            backgroundColor: @settings.color
-            opacity: @settings.opacity
-            zIndex:99999
 
         $html = $('html').clone()
         $html.find('body').addClass('sublime-scroll-window')
         $html.find('#sublime-scroll').remove()
         @el.scroll_bar.appendTo($html.find('body'))
 
-        # Transparent scroll pane background:
-        if @settings.transparent_background
-            $html.find('body').css do
-                backgroundColor: 'transparent'
-
         # Move fixed elements:
-        $html.find(@settings.fixed_elements).remove().css do
-            position: 'absolute'
-        .appendTo(@el.scroll_bar)
+        $html.find(@settings.fixed_elements).remove().addClass('sublime-scroll-fixed-element').appendTo(@el.scroll_bar)
 
         @el.iframe.on('load', @onIframeLoad)
 
         @iframe_document.write($html.html())
         @iframe_document.close()
 
-        @el.overlay = $ '<div>',
+        @el.overlay = $ '<div>', do
             id: 'sublime-scroll-overlay'
         .css do
-            position: 'fixed'
             top: @settings.top
-            right: 0
             width: @get_scroll_width()
-            height:'100%'
-            zIndex: @settings.zIndex + 3
         .appendTo(@el.wrapper)
 
     # On iframe load event:
@@ -214,11 +178,13 @@ class SublimeScroll
         if @content_height_scaled > @wrapper_height
             y = @el.scroll_bar.position().top * @scale_factor
 
-            max_margin = @content_height_scaled - @wrapper_height
-            
-            factor = y / @content_height_scaled
+            ch = @content_height_scaled - @viewport_height_scaled
 
-            viewport_factor = @viewport_height_scaled / @content_height_scaled
+            max_margin = ch - @wrapper_height
+            
+            factor = y / ch
+
+            viewport_factor = @viewport_height_scaled / ch
 
             margin = -(factor * max_margin + viewport_factor * y)
         else
