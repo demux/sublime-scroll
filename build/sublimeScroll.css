@@ -17,6 +17,7 @@
 }
 #sublime-scroll #sublime-scroll-overlay {
   position: fixed;
+  top: 0;
   right: 0;
   height: 100%;
   z-index: 10001;
@@ -26,6 +27,7 @@ body.sublime-scroll-window {
 }
 body.sublime-scroll-window #sublime-scroll-bar {
   position: absolute;
+  top: 0;
   right: 0;
   width: 100%;
   background-color: rgba(255,255,255,0.2);

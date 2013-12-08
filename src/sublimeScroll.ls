@@ -162,7 +162,7 @@ class SublimeScroll
     onScroll: (event) ~>
         if not @dragActive
             @el.scrollBar.css do
-                top: $(window).scrollTop()
+                transform: 'translateY(' + $(window).scrollTop() + 'px)'
 
         if @contentHeight_scaled > @wrapperHeight
             y = @el.scrollBar.position().top * @scaleFactor
@@ -180,7 +180,7 @@ class SublimeScroll
             margin = 0
 
         @el.iframe.css do
-            top: margin
+            transform: 'translateY(' + margin + 'px) scale(' + @scaleFactor + ')'
 
         return @
 
@@ -217,7 +217,7 @@ class SublimeScroll
             y = max_pos
 
         @el.scrollBar.css do
-            top: y
+            transform: 'translateY(' + y + 'px)'
 
         $(window).scrollTop(y)
 

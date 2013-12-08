@@ -148,7 +148,7 @@
       var y, ch, max_margin, factor, viewportFactor, margin;
       if (!this.dragActive) {
         this.el.scrollBar.css({
-          top: $(window).scrollTop()
+          transform: 'translateY(' + $(window).scrollTop() + 'px)'
         });
       }
       if (this.contentHeight_scaled > this.wrapperHeight) {
@@ -162,7 +162,7 @@
         margin = 0;
       }
       this.el.iframe.css({
-        top: margin
+        transform: 'translateY(' + margin + 'px) scale(' + this.scaleFactor + ')'
       });
       return this;
     };
@@ -195,7 +195,7 @@
         y = max_pos;
       }
       this.el.scrollBar.css({
-        top: y
+        transform: 'translateY(' + y + 'px)'
       });
       return $(window).scrollTop(y);
     };
