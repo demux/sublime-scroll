@@ -25,7 +25,7 @@ __contentWidth__   | int    |        | `function() {return $(document).outerWidt
 __contentWeight__  | int    |        | `function() {return $(document).outerHeight(true);}`
 __minWidth__       | int    |        | null
 
-__NOTE:__ Any setting can be a function. I order to access other settings within a setting, use setting getters i.e. `this.getContentWidth()` or `get[AnyCamelCaseSetting]()`
+__NOTE:__ Any setting can be a function. I order to access other settings within a setting, use setting getters i.e. `this.getContentWidth()` or `getAnyCamelCaseSetting()`
 
 
 See example.html for example code.
