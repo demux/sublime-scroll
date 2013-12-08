@@ -7,44 +7,28 @@
     prototype.el = {
       wrapper: null,
       iframe: null,
-      scroll_bar: null,
+      scrollBar: null,
       overlay: null
     };
-    prototype.drag_active = false;
-    prototype.scale_factor = null;
-    prototype.wrapper_height = null;
-    prototype.scroll_height = null;
-    prototype.viewport_height = null;
-    prototype.content_width = null;
-    prototype.content_height = null;
+    prototype.dragActive = false;
+    prototype.scaleFactor = null;
+    prototype.wrapperHeight = null;
+    prototype.viewportHeight = null;
     prototype.settings = null;
     prototype.update = function(options){
       return this.settings = $.extend(this.settings, options);
     };
-    prototype._get_setting = function(setting){
-      if (typeof this.settings[setting] === "function") {
-        return this.settings[setting].call(this, this.settings);
-      } else {
-        return this.settings[setting];
-      }
-    };
-    prototype.get_scroll_width = function(){
-      return this._get_setting('scroll_width');
-    };
-    prototype.get_scroll_height = function(){
-      return this._get_setting('scroll_height');
-    };
-    prototype.get_content_width = function(){
-      return this._get_setting('content_width');
-    };
-    prototype.get_content_height = function(){
-      return this._get_setting('content_height');
-    };
-    prototype.get_min_width = function(){
-      return this._get_setting('min_width');
+    prototype._setting_getter = function(key){
+      return function(){
+        if (typeof this.settings[key] === "function") {
+          return this.settings[key].call(this);
+        } else {
+          return this.settings[key];
+        }
+      };
     };
     function SublimeScroll(options){
-      var this$ = this;
+      var capFirst, setting, ref$, _v, this$ = this;
       this.onDrag = bind$(this, 'onDrag', prototype);
       this.onDragEnd = bind$(this, 'onDragEnd', prototype);
       this.onScroll = bind$(this, 'onScroll', prototype);
@@ -56,21 +40,26 @@
       this.settings = {
         top: 0,
         bottom: 0,
-        fixed_elements: '',
-        scroll_width: 150
+        fixedElements: '',
+        scrollWidth: 150,
+        scrollHeight: function(){
+          return $(window).height() - this.getTop() - this.getBottom();
+        },
+        contentWidth: function(){
+          return $(document).outerWidth(true);
+        },
+        contentHeight: function(){
+          return $(document).outerHeight(true);
+        },
+        minWidth: null
       };
-      this.settings.scroll_height = function(){
-        return $(window).height() - this.settings.top - this.settings.bottom;
+      capFirst = function(string){
+        return string.charAt(0).toUpperCase() + string.slice(1);
       };
-      this.settings.content_width = function(){
-        return $(document).outerWidth(true);
-      };
-      this.settings.content_height = function(){
-        return $(document).outerHeight(true);
-      };
-      this.settings.min_width = function(){
-        return this.get_content_width();
-      };
+      for (setting in ref$ = this.settings) {
+        _v = ref$[setting];
+        this['get' + capFirst(setting)] = this._setting_getter(setting);
+      }
       this.update(options);
       $(window).bind('resize.sublimeScroll', this.onResize).bind('scroll.sublimeScroll', this.onScroll);
       this.render();
@@ -89,9 +78,9 @@
       this.el.wrapper = $('<div>', {
         id: "sublime-scroll"
       }).css({
-        width: this.get_scroll_width(),
-        height: this.get_scroll_height(),
-        top: this.settings.top
+        width: this.getScrollWidth(),
+        height: this.getScrollHeight(),
+        top: this.getTop()
       }).appendTo($('body'));
       this.el.iframe = $('<iframe>', {
         id: 'sublime-scroll-iframe',
@@ -100,75 +89,75 @@
         allowTransparency: true
       }).appendTo(this.el.wrapper);
       this.iframe_document = this.el.iframe[0].contentDocument || this.el.iframe.contentWindow.document;
-      this.el.scroll_bar = $('<div>', {
+      this.el.scrollBar = $('<div>', {
         id: 'sublime-scroll-bar'
       });
       $html = $('html').clone();
       $html.find('body').addClass('sublime-scroll-window');
       $html.find('#sublime-scroll').remove();
-      this.el.scroll_bar.appendTo($html.find('body'));
-      $html.find(this.settings.fixed_elements).remove().addClass('sublime-scroll-fixed-element').appendTo(this.el.scroll_bar);
+      this.el.scrollBar.appendTo($html.find('body'));
+      $html.find(this.getFixedElements()).remove().addClass('sublime-scroll-fixed-element').appendTo(this.el.scrollBar);
       this.el.iframe.on('load', this.onIframeLoad);
       this.iframe_document.write($html.html());
       this.iframe_document.close();
       return this.el.overlay = $('<div>', {
         id: 'sublime-scroll-overlay'
       }).css({
-        top: this.settings.top,
-        width: this.get_scroll_width()
+        top: this.getTop(),
+        width: this.getScrollWidth()
       }).appendTo(this.el.wrapper);
     };
     prototype.onIframeLoad = function(event){
-      this.el.scroll_bar = $('#sublime-scroll-bar', this.iframe_document);
+      this.el.scrollBar = $('#sublime-scroll-bar', this.iframe_document);
       $(window).resize().scroll();
       return this.el.wrapper.animate({
         opacity: 1
       }, 100);
     };
     prototype.onResize = function(event){
-      var content_width, content_height;
-      content_width = this.get_content_width();
-      content_height = this.get_content_height();
-      if ($(window).width() > this.get_min_width()) {
-        this.el.wrapper.show();
-      } else {
+      var contentWidth, contentHeight;
+      contentWidth = this.getContentWidth();
+      contentHeight = this.getContentHeight();
+      if (this.getMinWidth() && $(window).width() < this.getMinWidth()) {
         this.el.wrapper.hide();
+      } else {
+        this.el.wrapper.show();
       }
-      this.scale_factor = this.get_scroll_width() / content_width;
-      this.content_width_scaled = content_width * this.scale_factor;
-      this.content_height_scaled = content_height * this.scale_factor;
+      this.scaleFactor = this.getScrollWidth() / contentWidth;
+      this.contentWidth_scaled = contentWidth * this.scaleFactor;
+      this.contentHeight_scaled = contentHeight * this.scaleFactor;
       this.el.iframe.css({
-        width: content_width,
-        height: content_height,
-        transform: 'scale(' + this.scale_factor + ')',
-        marginLeft: -(content_width / 2 - this.content_width_scaled / 2),
-        marginTop: -(content_height / 2 - this.content_height_scaled / 2)
+        width: contentWidth,
+        height: contentHeight,
+        transform: 'scale(' + this.scaleFactor + ')',
+        marginLeft: -(contentWidth / 2 - this.contentWidth_scaled / 2),
+        marginTop: -(contentHeight / 2 - this.contentHeight_scaled / 2)
       });
-      this.wrapper_height = this.get_scroll_height();
+      this.wrapperHeight = this.getScrollHeight();
       this.el.wrapper.css({
-        height: this.wrapper_height
+        height: this.wrapperHeight
       });
-      this.viewport_height = $(window).height();
-      this.viewport_height_scaled = this.viewport_height * this.scale_factor;
-      this.el.scroll_bar.css({
-        height: this.viewport_height
+      this.viewportHeight = $(window).height();
+      this.viewportHeight_scaled = this.viewportHeight * this.scaleFactor;
+      this.el.scrollBar.css({
+        height: this.viewportHeight
       });
       return $(window).scroll();
     };
     prototype.onScroll = function(event){
-      var y, ch, max_margin, factor, viewport_factor, margin;
-      if (!this.drag_active) {
-        this.el.scroll_bar.css({
+      var y, ch, max_margin, factor, viewportFactor, margin;
+      if (!this.dragActive) {
+        this.el.scrollBar.css({
           top: $(window).scrollTop()
         });
       }
-      if (this.content_height_scaled > this.wrapper_height) {
-        y = this.el.scroll_bar.position().top * this.scale_factor;
-        ch = this.content_height_scaled - this.viewport_height_scaled;
-        max_margin = ch - this.wrapper_height;
+      if (this.contentHeight_scaled > this.wrapperHeight) {
+        y = this.el.scrollBar.position().top * this.scaleFactor;
+        ch = this.contentHeight_scaled - this.viewportHeight_scaled;
+        max_margin = ch - this.wrapperHeight;
         factor = y / ch;
-        viewport_factor = this.viewport_height_scaled / ch;
-        margin = -(factor * max_margin + viewport_factor * y);
+        viewportFactor = this.viewportHeight_scaled / ch;
+        margin = -(factor * max_margin + viewportFactor * y);
       } else {
         margin = 0;
       }
@@ -180,32 +169,32 @@
     prototype.onDragEnd = function(event){
       event.preventDefault();
       this.el.overlay.css({
-        width: this.get_scroll_width()
+        width: this.getScrollWidth()
       });
       $(window).off('mousemove.sublimeScroll', this.onDrag);
-      return this.drag_active = false;
+      return this.dragActive = false;
     };
     prototype.onDrag = function(event){
-      var offsetY, _scale_factor, y, max_pos;
-      this.drag_active = true;
+      var offsetY, _scaleFactor, y, max_pos;
+      this.dragActive = true;
       if (!(event.target === this.el.overlay[0])) {
         return false;
       }
       offsetY = event.offsetY || event.originalEvent.layerY;
-      if (this.content_height_scaled > this.wrapper_height) {
-        _scale_factor = this.wrapper_height / this.get_content_height();
+      if (this.contentHeight_scaled > this.wrapperHeight) {
+        _scaleFactor = this.wrapperHeight / this.getContentHeight();
       } else {
-        _scale_factor = this.scale_factor;
+        _scaleFactor = this.scaleFactor;
       }
-      y = offsetY / _scale_factor - this.viewport_height / 2;
-      max_pos = this.get_content_height() - this.viewport_height;
+      y = offsetY / _scaleFactor - this.viewportHeight / 2;
+      max_pos = this.getContentHeight() - this.viewportHeight;
       if (y < 0) {
         y = 0;
       }
       if (y > max_pos) {
         y = max_pos;
       }
-      this.el.scroll_bar.css({
+      this.el.scrollBar.css({
         top: y
       });
       return $(window).scrollTop(y);
@@ -219,12 +208,10 @@
     return SublimeScroll;
   }());
   window.SublimeScroll = SublimeScroll;
-  _sublime_scroll_object = null;
   $.sublimeScroll = function(options){
-    var _sublime_scroll_object;
-    if (_sublime_scroll_object && options) {
+    if (_sublime_scroll_object != null && options != null) {
       return _sublime_scroll_object.update(options);
-    } else if (_sublime_scroll_object) {
+    } else if (_sublime_scroll_object != null) {
       return _sublime_scroll_object;
     } else {
       _sublime_scroll_object = new SublimeScroll(options);

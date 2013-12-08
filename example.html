@@ -17,6 +17,9 @@
                 fixedElements: 'header.top, footer.bottom',
                 contentWidth: function() {
                     return $('#content .wrapper').outerWidth();
+                },
+                minWidth: function() {
+                    return this.getContentWidth();
                 }
             });
         });

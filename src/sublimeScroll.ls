@@ -2,7 +2,7 @@ class SublimeScroll
     el:
         wrapper:        null
         iframe:         null
-        scroll_bar:     null
+        scrollBar:      null
         overlay:        null
 
     dragActive:     false
@@ -15,21 +15,14 @@ class SublimeScroll
         @settings = $.extend(@settings, options)
 
     # Settings getters:
-    _get_setting: (setting) ->
-        if typeof(@settings[setting]) is "function"
-            return @settings[setting].call(this, @settings)
+    _setting_getter: (key) -> ->
+        if typeof(@settings[key]) is "function"
+            return @settings[key].call(this)
         else
-            return @settings[setting]
-
-    get_scrollWith: -> @_get_setting('scrollWidth')
-    get_scrollHeight: -> @_get_setting('scrollHeight')
-    get_contentWidth: -> @_get_setting('contentWidth')
-    get_contentHeight: -> @_get_setting('contentHeight')
-    get_minWidth: -> @_get_setting('minWidth')
+            return @settings[key]
 
     # Constructor:
     (options) ->
-        console.log 'init'
         # Don't render inside iframes
         if not (top.document is document)
             return @
@@ -40,19 +33,20 @@ class SublimeScroll
             bottom: 0
             fixedElements: ''
             scrollWidth: 150
-            scrollHeight: -> $(window).height() - @settings.top - @settings.bottom
+            scrollHeight: -> $(window).height() - @getTop() - @getBottom()
             contentWidth: -> $(document).outerWidth(true)
             contentHeight: -> $(document).outerHeight(true)
-            minWidth: -> @get_contentWidth()
+            minWidth: null
 
-        # Update default settings with options:
+        # Create getters:
+        capFirst = (string) ->
+            string.charAt(0).toUpperCase() + string.slice(1)
+
+        for setting, _v of @settings
+            this['get' + capFirst(setting)] = @_setting_getter(setting)
+
+        # Update default settings Width options:
         @update(options)
-
-        console.log @settings
-
-        # Create settings getters:
-        #for key, value of @settings
-        #    this['get_' + key] = @_get_setting(key)
 
         # Create events:
         $(window)
@@ -83,9 +77,9 @@ class SublimeScroll
         @el.wrapper = $ '<div>', do
             id: "sublime-scroll"
         .css do
-            width: @get_scrollWith()
-            height: @get_scrollHeight()
-            top: @settings.top
+            width: @getScrollWidth()
+            height: @getScrollHeight()
+            top: @getTop()
         .appendTo($('body'))
 
         # iframe:
@@ -99,16 +93,16 @@ class SublimeScroll
         @iframe_document = @el.iframe[0].contentDocument or @el.iframe.contentWindow.document
 
         # Scroll bar:
-        @el.scroll_bar = $ '<div>', do
+        @el.scrollBar = $ '<div>', do
             id: 'sublime-scroll-bar'
 
         $html = $('html').clone()
         $html.find('body').addClass('sublime-scroll-window')
         $html.find('#sublime-scroll').remove()
-        @el.scroll_bar.appendTo($html.find('body'))
+        @el.scrollBar.appendTo($html.find('body'))
 
         # Move fixed elements:
-        $html.find(@settings.fixedElements).remove().addClass('sublime-scroll-fixed-element').appendTo(@el.scroll_ar)
+        $html.find(@getFixedElements()).remove().addClass('sublime-scroll-fixed-element').appendTo(@el.scrollBar)
 
         @el.iframe.on('load', @onIframeLoad)
 
@@ -118,27 +112,27 @@ class SublimeScroll
         @el.overlay = $ '<div>', do
             id: 'sublime-scroll-overlay'
         .css do
-            top: @settings.top
-            width: @get_scrollWith()
+            top: @getTop()
+            width: @getScrollWidth()
         .appendTo(@el.wrapper)
 
     # On iframe load event:
     onIframeLoad: (event) ~>
-        @el.scroll_bar = $('#sublime-scroll-bar', @iframe_document)
+        @el.scrollBar = $('#sublime-scroll-bar', @iframe_document)
         $(window).resize().scroll()
         @el.wrapper.animate({opacity: 1}, 100)
 
     # On resize event:
     onResize: (event) ~>
-        contentWidth = @get_contentWidth()
-        contentHeight = @get_contentHeight()
+        contentWidth = @getContentWidth()
+        contentHeight = @getContentHeight()
 
-        if $(window).width() > @get_minWidth()
-            @el.wrapper.show()
-        else
+        if @getMinWidth() and $(window).width() < @getMinWidth()
             @el.wrapper.hide()
+        else
+            @el.wrapper.show()
 
-        @scaleFactor = @get_scrollWith() / contentWidth
+        @scaleFactor = @getScrollWidth() / contentWidth
 
         @contentWidth_scaled = contentWidth * @scaleFactor
         @contentHeight_scaled = contentHeight * @scaleFactor
@@ -151,7 +145,7 @@ class SublimeScroll
             marginTop: -(contentHeight / 2 - @contentHeight_scaled / 2)
 
         # Scroll wrapper
-        @wrapperHeight = @get_scrollHeight()
+        @wrapperHeight = @getScrollHeight()
         @el.wrapper.css do
             height: @wrapperHeight
 
@@ -159,7 +153,7 @@ class SublimeScroll
         @viewportHeight = $(window).height()
         @viewportHeight_scaled = @viewportHeight * @scaleFactor
 
-        @el.scroll_bar.css do
+        @el.scrollBar.css do
             height: @viewportHeight
 
         $(window).scroll()
@@ -167,11 +161,11 @@ class SublimeScroll
     # On scroll event:
     onScroll: (event) ~>
         if not @dragActive
-            @el.scroll_bar.css do
+            @el.scrollBar.css do
                 top: $(window).scrollTop()
 
         if @contentHeight_scaled > @wrapperHeight
-            y = @el.scroll_bar.position().top * @scaleFactor
+            y = @el.scrollBar.position().top * @scaleFactor
 
             ch = @contentHeight_scaled - @viewportHeight_scaled
 
@@ -195,7 +189,7 @@ class SublimeScroll
         event.preventDefault()
 
         @el.overlay.css do
-            width: @get_scrollWith()
+            width: @getScrollWidth()
 
         $(window).off('mousemove.sublimeScroll', @onDrag)
 
@@ -209,20 +203,20 @@ class SublimeScroll
 
         offsetY = event.offsetY or event.originalEvent.layerY
         if @contentHeight_scaled > @wrapperHeight
-            _scaleFactor = @wrapperHeight / @get_contentHeight()
+            _scaleFactor = @wrapperHeight / @getContentHeight()
         else
             _scaleFactor = @scaleFactor
 
         y = (offsetY / _scaleFactor - @viewportHeight / 2)
 
-        max_pos = @get_contentHeight() - @viewportHeight
+        max_pos = @getContentHeight() - @viewportHeight
 
         if y < 0
             y = 0
         if y > max_pos
             y = max_pos
 
-        @el.scroll_bar.css do
+        @el.scrollBar.css do
             top: y
 
         $(window).scrollTop(y)
@@ -240,16 +234,16 @@ class SublimeScroll
 
 window.SublimeScroll = SublimeScroll
 
-_sublime_scroll_object = null
+var _sublime_scroll_object
 
 $.sublimeScroll = (options) ->
-    if _sublime_scroll_object and options
+    if _sublime_scroll_object? and options?
         return _sublime_scroll_object.update(options)
 
-    else if _sublime_scroll_object
+    else if _sublime_scroll_object?
         return _sublime_scroll_object
 
     else
-        _sublime_scroll_object = new SublimeScroll(options)
+        _sublime_scroll_object := new SublimeScroll(options)
 
         return _sublime_scroll_object
