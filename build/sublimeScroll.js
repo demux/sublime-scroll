@@ -16,7 +16,8 @@
     prototype.viewportHeight = null;
     prototype.settings = null;
     prototype.update = function(options){
-      return this.settings = $.extend(this.settings, options);
+      this.settings = $.extend(this.settings, options);
+      return this;
     };
     prototype._setting_getter = function(key){
       return function(){
@@ -100,19 +101,21 @@
       this.el.iframe.on('load', this.onIframeLoad);
       this.iframe_document.write($html.html());
       this.iframe_document.close();
-      return this.el.overlay = $('<div>', {
+      this.el.overlay = $('<div>', {
         id: 'sublime-scroll-overlay'
       }).css({
         top: this.getTop(),
         width: this.getScrollWidth()
       }).appendTo(this.el.wrapper);
+      return this;
     };
     prototype.onIframeLoad = function(event){
       this.el.scrollBar = $('#sublime-scroll-bar', this.iframe_document);
       $(window).resize().scroll();
-      return this.el.wrapper.animate({
+      this.el.wrapper.animate({
         opacity: 1
       }, 100);
+      return this;
     };
     prototype.onResize = function(event){
       var contentWidth, contentHeight;
@@ -142,7 +145,8 @@
       this.el.scrollBar.css({
         height: this.viewportHeight
       });
-      return $(window).scroll();
+      $(window).scroll();
+      return this;
     };
     prototype.onScroll = function(event){
       var y, ch, max_margin, factor, viewportFactor, margin;
@@ -172,7 +176,8 @@
         width: this.getScrollWidth()
       });
       $(window).off('mousemove.sublimeScroll', this.onDrag);
-      return this.dragActive = false;
+      this.dragActive = false;
+      return this;
     };
     prototype.onDrag = function(event){
       var offsetY, _scaleFactor, y, max_pos;
@@ -197,7 +202,8 @@
       this.el.scrollBar.css({
         transform: 'translateY(' + y + 'px)'
       });
-      return $(window).scrollTop(y);
+      $(window).scrollTop(y);
+      return this;
     };
     prototype.destroy = function(){
       var _sublime_scroll_object;

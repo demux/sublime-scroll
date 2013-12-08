@@ -13,6 +13,7 @@ class SublimeScroll
 
     update: (options) ->
         @settings = $.extend(@settings, options)
+        return @
 
     # Settings getters:
     _setting_getter: (key) -> ->
@@ -116,11 +117,15 @@ class SublimeScroll
             width: @getScrollWidth()
         .appendTo(@el.wrapper)
 
+        return @
+
     # On iframe load event:
     onIframeLoad: (event) ~>
         @el.scrollBar = $('#sublime-scroll-bar', @iframe_document)
         $(window).resize().scroll()
         @el.wrapper.animate({opacity: 1}, 100)
+
+        return @
 
     # On resize event:
     onResize: (event) ~>
@@ -157,6 +162,8 @@ class SublimeScroll
             height: @viewportHeight
 
         $(window).scroll()
+
+        return @
 
     # On scroll event:
     onScroll: (event) ~>
@@ -195,6 +202,8 @@ class SublimeScroll
 
         @dragActive = false
 
+        return @
+
     # On drag event:
     onDrag: (event) ~>
         @dragActive = true
@@ -220,6 +229,8 @@ class SublimeScroll
             transform: 'translateY(' + y + 'px)'
 
         $(window).scrollTop(y)
+
+        return @
 
     # Destroy the scroll bar
     destroy: ->
