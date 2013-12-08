@@ -23,12 +23,8 @@
                     bottom: 40,
                     scrollWidth: 200,
                     fixedElements: 'header.top, footer.bottom',
-                    contentWidth: function() {
-                        return $('#content .wrapper').outerWidth();
-                    },
-                    minWidth: function() {
-                        return this.getContentWidth();
-                    }
+                    contentWidth: 860,
+                    minWidth: 1000
                 });
             });
         }
