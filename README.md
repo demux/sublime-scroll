@@ -29,3 +29,6 @@ __NOTE:__ Any setting can be a function. I order to access other settings within
 
 
 See example.html for example code.
+
+## License:
+MIT License
