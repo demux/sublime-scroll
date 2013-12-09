@@ -1,3 +1,6 @@
+/* Copyright 2013-present Arnar Yngvason
+ * Licensed under MIT License */
+
 class SublimeScroll
     el:
         wrapper:        null
@@ -33,11 +36,14 @@ class SublimeScroll
             top: 0
             bottom: 0
             fixedElements: ''
+            removeElements: ''
             scrollWidth: 150
             scrollHeight: -> $(window).height() - @getTop() - @getBottom()
             contentWidth: -> $(document).outerWidth(true)
             contentHeight: -> $(document).outerHeight(true)
             minWidth: null
+            render: true
+            include: []
 
         # Create getters:
         capFirst = (string) ->
@@ -55,7 +61,7 @@ class SublimeScroll
             .bind('scroll.sublimeScroll', @onScroll)
 
         # Render scroll bar:
-        @render()
+        @render() if @getRender()
 
         # Events for rendered elements:
         @el.overlay.on 'mousedown.sublimeScroll', (event) ~>
@@ -104,6 +110,19 @@ class SublimeScroll
 
         # Move fixed elements:
         $html.find(@getFixedElements()).remove().addClass('sublime-scroll-fixed-element').appendTo(@el.scrollBar)
+        $html.find(@getRemoveElements()).remove()
+
+        # Include files:
+        for inc in @getInclude().filter((str) -> /\.js$/.test(str))
+            $html.find('body').append $ '<script>', do
+                src: inc
+                type: 'text/javascript'
+
+        for inc in @getInclude().filter((str) -> /\.css$/.test(str))
+            $html.find('head').append $ '<link>', do
+                href: inc
+                rel: 'stylesheet'
+                type: 'text/css'
 
         @el.iframe.on('load', @onIframeLoad)
 
