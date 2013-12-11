@@ -32,6 +32,12 @@
     };
     function SublimeScroll(options){
       var capFirst, setting, ref$, _v;
+      this.onDrag = bind$(this, 'onDrag', prototype);
+      this.onDragEnd = bind$(this, 'onDragEnd', prototype);
+      this.onScroll = bind$(this, 'onScroll', prototype);
+      this.onResize = bind$(this, 'onResize', prototype);
+      this.onIframeLoad = bind$(this, 'onIframeLoad', prototype);
+      this.onMousedown = bind$(this, 'onMousedown', prototype);
       if (!(top.document === document)) {
         return this;
       }
@@ -62,11 +68,11 @@
         this['get' + capFirst(setting)] = this._setting_getter(setting);
       }
       this.update(options);
-      $(window).bind('resize.sublimeScroll', this.onResize.bind(this)).bind('scroll.sublimeScroll', this.onScroll.bind(this));
+      $(window).bind('resize.sublimeScroll', this.onResize).bind('scroll.sublimeScroll', this.onScroll);
       if (this.getRender()) {
         this.render();
       }
-      this.el.overlay.on('mousedown.sublimeScroll', this.onMousedown.bind(this));
+      this.el.overlay.on('mousedown.sublimeScroll', this.onMousedown);
       return this;
     }
     prototype.onMousedown = function(event){
@@ -74,7 +80,7 @@
       this.el.overlay.css({
         width: '100%'
       });
-      $(window).on('mousemove.sublimeScroll', this.onDrag.bind(this)).one('mouseup.sublimeScroll', this.onDragEnd.bind(this));
+      $(window).on('mousemove.sublimeScroll', this.onDrag).one('mouseup.sublimeScroll', this.onDragEnd);
       return this.onDrag(event);
     };
     prototype.render = function(){
@@ -117,7 +123,7 @@
           type: 'text/css'
         }));
       }
-      this.el.iframe.on('load', this.onIframeLoad.bind(this));
+      this.el.iframe.on('load', this.onIframeLoad);
       this.iframe_document.write($html.html());
       this.iframe_document.close();
       this.el.overlay = $('<div>', {
@@ -249,4 +255,7 @@
       return _sublime_scroll_object;
     }
   };
+  function bind$(obj, key, target){
+    return function(){ return (target || obj)[key].apply(obj, arguments) };
+  }
 }).call(this);

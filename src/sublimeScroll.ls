@@ -57,26 +57,25 @@ class SublimeScroll
 
         # Create events:
         $(window)
-            .bind('resize.sublimeScroll', @onResize.bind(this))
-            .bind('scroll.sublimeScroll', @onScroll.bind(this))
+            .bind('resize.sublimeScroll', @onResize)
+            .bind('scroll.sublimeScroll', @onScroll)
 
         # Render scroll bar:
         @render() if @getRender()
 
         # Events for rendered elements:
-        @el.overlay.on 'mousedown.sublimeScroll', @onMousedown.bind(this)
-
+        @el.overlay.on 'mousedown.sublimeScroll', @onMousedown
         return @
 
-    onMousedown: (event) ->
+    onMousedown: (event) ~>
         event.preventDefault()
 
         @el.overlay.css do
             width: '100%'
 
         $(window)
-            .on('mousemove.sublimeScroll', @onDrag.bind(this))
-            .one('mouseup.sublimeScroll', @onDragEnd.bind(this))
+            .on('mousemove.sublimeScroll', @onDrag)
+            .one('mouseup.sublimeScroll', @onDragEnd)
 
         @onDrag(event)
 
@@ -128,7 +127,7 @@ class SublimeScroll
                 rel: 'stylesheet'
                 type: 'text/css'
 
-        @el.iframe.on('load', @onIframeLoad.bind(this))
+        @el.iframe.on('load', @onIframeLoad)
 
         @iframe_document.write($html.html())
         @iframe_document.close()
@@ -143,7 +142,7 @@ class SublimeScroll
         return @
 
     # On iframe load event:
-    onIframeLoad: (event) ->
+    onIframeLoad: (event) ~>
         @el.scrollBar = $('#sublime-scroll-bar', @iframe_document)
         $(window).resize().scroll()
         @el.wrapper.animate({opacity: 1}, 100)
@@ -151,7 +150,7 @@ class SublimeScroll
         return @
 
     # On resize event:
-    onResize: (event) ->
+    onResize: (event) ~>
         contentWidth = @getContentWidth()
         contentHeight = @getContentHeight()
 
@@ -189,7 +188,7 @@ class SublimeScroll
         return @
 
     # On scroll event:
-    onScroll: (event) ->
+    onScroll: (event) ~>
         if not @dragActive
             @el.scrollBar.css do
                 transform: 'translateY(' + $(window).scrollTop() + 'px)'
@@ -215,7 +214,7 @@ class SublimeScroll
         return @
 
     # On drag end event:
-    onDragEnd: (event) ->
+    onDragEnd: (event) ~>
         event.preventDefault()
 
         @el.overlay.css do
@@ -228,7 +227,7 @@ class SublimeScroll
         return @
 
     # On drag event:
-    onDrag: (event) ->
+    onDrag: (event) ~>
         @dragActive = true
         if not (event.target is @el.overlay[0])
             return false
