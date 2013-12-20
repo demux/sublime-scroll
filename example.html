@@ -18,15 +18,22 @@
         // See also example.css:15
         if(Modernizr.csstransforms) {
             $(document).ready(function() {
-                $.sublimeScroll({
+                window.SublimeScroll = $.sublimeScroll({
                     top: 60, // px to top
                     bottom: 40, // px to bottom
                     scrollWidth: 200, // Width of scrollbar
                     removeElements: 'script',
                     fixedElements: 'header.top, footer.bottom',
                     contentWidth: 860, // Scroll viewport width
-                    minWidth: 1000 // Min width of window to display scroll
+                    minWidth: 1000, // Min width of window to display scroll
+                    autoRender: false // In case you would like to do some monkey patching before rendering.
                 });
+
+                // Build and render the scrollbar:
+                // Note: You don't need to call this unless you set autoRender to false;
+                SublimeScroll.build();
+                // ---- This is a good place to monkeypatch SublimeScroll.html ----
+                SublimeScroll.render();
             });
         }
     </script>
