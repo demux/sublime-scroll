@@ -49,3 +49,16 @@ footer.bottom {
 body.sublime-scroll-window .wrapper {
     padding: 0;
 }
+
+#content2 {
+    position: relative;
+    padding-right: 100px;
+    border: 1px solid white;
+    height: 400px;
+    overflow: scroll;
+    overflow-x: hidden;
+}
+
+#content2 .inner, .sublime-scroll .inner {
+    padding: 0 50px
+}

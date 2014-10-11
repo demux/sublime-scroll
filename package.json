@@ -1,0 +1,12 @@
+{
+  "name": "sublime-scroll",
+  "version": "0.5.2",
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "grunt-livescript": "~0.5.1",
+    "grunt-contrib-watch": "~0.6.1",
+    "LiveScript": "~1.2.0",
+    "grunt-contrib-stylus": "~0.17.0",
+    "package.json": "0.0.0"
+  }
+}

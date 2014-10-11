@@ -1,0 +1,43 @@
+zIndex = 9999
+scrollBarColor = rgba(255, 255, 255, 0.1)
+scrollBarOpacity = 0.9
+iframeBackground = transparent
+
+.sublime-scroll-wrapper
+    overflow: hidden
+    position: relative
+
+    .sublime-scroll
+        position: absolute
+        overflow: hidden
+        z-index: zIndex
+        right: 15px
+
+        .sublime-scroll-pane
+            position: absolute
+            overflow: hidden
+            top: 0
+            left: 0
+            z-index: (zIndex + 1)
+
+            .sublime-scroll-bar
+                position: absolute
+                top: 0
+                right: 0
+                width: 100%
+                background-color: scrollBarColor
+                opacity: scrollBarOpacity
+                z-index: 99999
+
+                .sublime-scroll-fixed-element
+                    position: absolute
+                    box-shadow: none
+
+
+        .sublime-scroll-overlay
+            position: absolute
+            top: 0
+            right: 0
+            height: 100%
+            z-index: (zIndex + 2)
+
