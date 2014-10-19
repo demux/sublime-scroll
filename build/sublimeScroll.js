@@ -5,6 +5,16 @@
   SublimeScroll = (function(){
     SublimeScroll.displayName = 'SublimeScroll';
     var prototype = SublimeScroll.prototype, constructor = SublimeScroll;
+    prototype.isTouch = ('ontouchstart' in window);
+    if (prototype.isTouch) {
+        prototype.eventStart = 'touchstart';
+        prototype.startMove = 'touchmove';
+        prototype.endMove = 'touchend';
+    } else {
+        prototype.eventStart = 'mousedown';
+        prototype.startMove = 'mousemove';
+        prototype.endMove = 'mouseup';
+    }
     prototype.el = {
       wrapper: null,
       iframe: null,
@@ -16,6 +26,37 @@
     prototype.wrapperHeight = null;
     prototype.viewportHeight = null;
     prototype.settings = null;
+    prototype.addEvent = function (evnt, elem, func) {
+        // W3C DOM
+        if (elem.addEventListener) {
+            elem.addEventListener(evnt, func, false);
+        } else if (elem.attachEvent) { // IE DOM
+            elem.attachEvent('on' + evnt, func);
+        } else { // No much to do
+            elem[evnt] = func;
+        }
+    };
+    prototype.removeEvent = function (evnt, elem, func) {
+        if (elem.removeEventListener) {
+            elem.removeEventListener(evnt, func, false);
+        } else if (elem.detachEvent) {
+            elem.detachEvent('on' + evnt, func);
+        } else {
+            elem['on' + evnt] = null;
+        }
+    };
+    prototype.fireEvent = function (obj, evt) {
+        var fireOnThis = obj,
+            evtObj;
+        if (document.createEvent) {
+            evtObj = document.createEvent('MouseEvents');
+            evtObj.initEvent(evt, true, false);
+            fireOnThis.dispatchEvent(evtObj);
+        } else if (document.createEventObject) {
+            evtObj = document.createEventObject();
+            fireOnThis.fireEvent('on' + evt, evtObj);
+        }
+    };
     prototype.update = function(options){
       this.settings = $.extend(this.settings, options);
       return this;
@@ -67,11 +108,12 @@
         this['get' + capFirst(setting)] = this._setting_getter(setting);
       }
       this.update(options);
-      $(window).bind('resize.sublimeScroll', this.onResize).bind('scroll.sublimeScroll', this.onScroll);
+      this.addEvent('resize', window, this.onResize);
+      this.addEvent('scroll', window, this.onScroll);
       if (this.getRender()) {
         this.render();
       }
-      this.el.overlay.on('mousedown.sublimeScroll', this.onMousedown);
+      this.addEvent(this.eventStart, this.el.overlay.get(0), this.onMousedown);
       return this;
     }
     prototype.onMousedown = function(event){
@@ -79,7 +121,8 @@
       this.el.overlay.css({
         width: '100%'
       });
-      $(window).on('mousemove.sublimeScroll', this.onDrag).one('mouseup.sublimeScroll', this.onDragEnd);
+      this.addEvent(this.startMove, window, this.onDrag);
+      this.addEvent(this.endMove, window, this.onDragEnd);
       return this.onDrag(event);
     };
     prototype.render = function(){
@@ -122,7 +165,7 @@
           type: 'text/css'
         }));
       }
-      this.el.iframe.on('load', this.onIframeLoad);
+      this.addEvent('load', this.el.iframe.get(0), this.onIframeLoad);
       this.iframe_document.write($html.html());
       this.iframe_document.close();
       this.el.overlay = $('<div>', {
@@ -141,7 +184,8 @@
     };
     prototype.onIframeLoad = function(event){
       this.el.scrollBar = $('#sublime-scroll-bar', this.iframe_document);
-      $(window).resize().scroll();
+      this.fireEvent(window, 'resize');
+      this.fireEvent(window, 'scroll');
       this.el.wrapper.animate({
         opacity: 1
       }, 100);
@@ -201,11 +245,13 @@
       return this;
     };
     prototype.onDragEnd = function(event){
-      event.preventDefault();
+      if (!this.isTouch) {
+        event.preventDefault();
+        this.removeEvent(this.startMove, window, this.onDrag);
+      }
       this.el.overlay.css({
         width: this.getScrollWidth()
       });
-      $(window).off('mousemove.sublimeScroll', this.onDrag);
       this.dragActive = false;
       return this;
     };
@@ -213,9 +259,14 @@
       var offsetY, _scaleFactor, y, max_pos;
       this.dragActive = true;
       if (!(event.target === this.el.overlay[0])) {
+        this.dragActive = false;
         return false;
       }
-      offsetY = event.offsetY || event.originalEvent.layerY;
+      if (this.isTouch) {
+        offsetY = event.changedTouches[0].pageY - this.el.overlay.offset().top;
+      } else {
+        offsetY = event.offsetY || event.clientY;
+      }
       if (this.contentHeight_scaled > this.wrapperHeight) {
         _scaleFactor = this.wrapperHeight / this.getContentHeight();
       } else {
@@ -237,7 +288,8 @@
     };
     prototype.destroy = function(){
       var _sublime_scroll_object;
-      $(window).off('resize.sublimeScroll', this.onResize).off('scroll.sublimeScroll', this.onScroll);
+      this.removeEvent('resize', window, this.onResize);
+      this.removeEvent('scroll', window, this.onScroll);
       _sublime_scroll_object = null;
       return this;
     };
