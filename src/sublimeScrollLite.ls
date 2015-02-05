@@ -69,6 +69,8 @@ class SublimeScrollLite
         @el.overlay.css do
             width: '100%'
 
+        @el.contentWrapper.addClass('sublime-scroll-dragging')
+
         @el.overlay.on('mousemove.sublimeScroll', @onDrag)
         $(window).one('mouseup.sublimeScroll', @onDragEnd)
 
@@ -189,6 +191,8 @@ class SublimeScrollLite
 
         @el.overlay.css do
             width: @getScrollWidth()
+
+        @el.contentWrapper.removeClass('sublime-scroll-dragging')
 
         @el.overlay.off('mousemove.sublimeScroll', @onDrag)
 
