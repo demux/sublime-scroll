@@ -73,14 +73,16 @@ class SublimeScroll
         @el.overlay.css do
             width: '100%'
 
+        @el.wrapper.add(@el.scrollBar.closest('body')).addClass('sublime-scroll-dragging')
+
         $(window)
             .on('mousemove.sublimeScroll', @onDrag)
             .one('mouseup.sublimeScroll', @onDragEnd)
 
         @onDrag(event)
 
-        
-    
+
+
     # Render scroll bar:
     render: ->
         # Wrapper:
@@ -99,7 +101,7 @@ class SublimeScroll
             scrolling: 'no'
             allowTransparency: true
         .appendTo(@el.wrapper)
-        
+
         @iframe_document = @el.iframe[0].contentDocument or @el.iframe.contentWindow.document
 
         # Scroll bar:
@@ -199,7 +201,7 @@ class SublimeScroll
             ch = @contentHeight_scaled - @viewportHeight_scaled
 
             max_margin = ch - @wrapperHeight
-            
+
             factor = y / ch
 
             viewportFactor = @viewportHeight_scaled / ch
@@ -219,6 +221,8 @@ class SublimeScroll
 
         @el.overlay.css do
             width: @getScrollWidth()
+
+        @el.wrapper.add(@el.scrollBar.closest('body')).removeClass('sublime-scroll-dragging')
 
         $(window).off('mousemove.sublimeScroll', @onDrag)
 
