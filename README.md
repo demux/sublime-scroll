@@ -9,7 +9,7 @@ Working demo: http://django.is
 
 ## Installation
 
-###Requires:
+### Requires:
 
 * jQuery (http://jquery.com/)
 
